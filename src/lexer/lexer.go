@@ -33,11 +33,11 @@ func (l *Lexer) NextToken() token.Token {
 
 	switch l.ch {
 	case '=':
-		tok = newToken(token.ASSIGN, l.ch)
+		tok = l.extractEqualityOperatorsToken(l.ch, token.EQ, token.ASSIGN)
 	case '+':
 		tok = newToken(token.PLUS, l.ch)
 	case '!':
-		tok = newToken(token.BANG, l.ch)
+		tok = l.extractEqualityOperatorsToken(l.ch, token.NOT_EQ, token.BANG)
 	case '-':
 		tok = newToken(token.MINUS, l.ch)
 	case '/':
@@ -84,8 +84,26 @@ func (l *Lexer) NextToken() token.Token {
 	return tok
 }
 
+func (l *Lexer) peekChar() byte {
+	if l.nextPosition >= len(l.input) {
+		return 0
+	}
+
+	return l.input[l.nextPosition]
+}
+
 func newToken(tokenType token.TokenType, ch byte) token.Token {
 	return token.Token{Type: tokenType, Literal: string(ch)}
+}
+
+func (l *Lexer) extractEqualityOperatorsToken(ch byte, tokenType token.TokenType, defaultTokenType token.TokenType) token.Token {
+	if l.peekChar() == '=' {
+		ch := l.ch
+		l.readChar()
+		return token.Token{Type: tokenType, Literal: string(ch) + string(l.ch)}
+	}
+
+	return newToken(defaultTokenType, l.ch)
 }
 
 func (l *Lexer) readIdentifier() string {
