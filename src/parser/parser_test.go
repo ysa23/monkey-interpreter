@@ -61,7 +61,7 @@ func TestReturnStatments(t *testing.T) {
 	}
 
 	for _, stmt := range program.Statements {
-		returnStmt, ok := stmt.(*ast.ReturnStatment)
+		returnStmt, ok := stmt.(*ast.ReturnStatement)
 		if !ok {
 			t.Errorf("Expected statment to be a return statment but was %T", stmt)
 			continue
