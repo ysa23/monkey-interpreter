@@ -41,6 +41,37 @@ func TestLetStatments(t *testing.T) {
 	}
 }
 
+func TestReturnStatments(t *testing.T) {
+	input := `
+		return 5;
+		return 10;
+		return 993322;`
+
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if program == nil {
+		t.Fatalf("Expected ParseProgram to return an object, and not nil")
+	}
+	if len(program.Statements) != 3 {
+		t.Fatalf("Expected program.Statements to contain 3 statements, but got %d", len(program.Statements))
+	}
+
+	for _, stmt := range program.Statements {
+		returnStmt, ok := stmt.(*ast.ReturnStatment)
+		if !ok {
+			t.Errorf("Expected statment to be a return statment but was %T", stmt)
+			continue
+		}
+		if returnStmt.TokenLiteral() != "return" {
+			t.Errorf("Expected token litaral to be 'return' but was '%q'", returnStmt.TokenLiteral())
+		}
+	}
+}
+
 func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	if s.TokenLiteral() != "let" {
 		t.Errorf("Expected token literal to be 'let' but was %q", s.TokenLiteral())
