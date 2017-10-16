@@ -105,27 +105,63 @@ func TestIdentifierExpression(t *testing.T) {
 	program := p.ParseProgram()
 	checkParserErrors(t, p)
 
-	if len(program.Statements) != 1 {
-		t.Fatalf("Statments not parsed correctly. Expected one statement, but got %d", len(program.Statements))
-	}
+	AssertProgramStatementLength(t, program, 1)
 
-	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-	if !ok {
-		t.Fatalf("Expected ExpressionStatment but got %T", program.Statements[0])
-	}
-
+	stmt := GetExpressionStatement(t, program, 0)
 	ident, ok := stmt.Expression.(*ast.Identifier)
 	if !ok {
 		t.Fatalf("Expected Identifier but got %T", stmt.Expression)
 	}
 
-	AssertAreEqual(t, ident.Value, "foobar", "Identifer Value")
-	AssertAreEqual(t, ident.TokenLiteral(), "foobar", "Identifier TokenLiteral")
+	AssertStringsAreEqual(t, ident.Value, "foobar", "Identifer Value")
+	AssertStringsAreEqual(t, ident.TokenLiteral(), "foobar", "Identifier TokenLiteral")
 }
 
-func AssertAreEqual(t *testing.T, actual string, expected string, actualDescription string) {
+func TestIntegerLiteralExpression(t *testing.T) {
+	input := "5;"
+
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+	AssertProgramStatementLength(t, program, 1)
+
+	stmt := GetExpressionStatement(t, program, 0)
+
+	literal, ok := stmt.Expression.(*ast.IntegerLiteral)
+	if !ok {
+		t.Fatalf("Expected integer literal but got %T", stmt.Expression)
+	}
+
+	AssertIntegersAreEqual(t, literal.Value, 5, "Literal Value")
+	AssertStringsAreEqual(t, literal.TokenLiteral(), "5", "Literal TokenLiteral")
+}
+
+func AssertProgramStatementLength(t *testing.T, program *ast.Program, expectedStatmemtCount int) {
+	if len(program.Statements) != expectedStatmemtCount {
+		t.Fatalf("Statments not parsed correctly. Expected one statement, but got %d", len(program.Statements))
+	}
+}
+
+func GetExpressionStatement(t *testing.T, program *ast.Program, expectedStatementIndex int) *ast.ExpressionStatement {
+	stmt, ok := program.Statements[expectedStatementIndex].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Expected ExpressionStatment but got %T", program.Statements[0])
+	}
+
+	return stmt
+}
+
+func AssertStringsAreEqual(t *testing.T, actual string, expected string, actualDescription string) {
 	if actual != expected {
 		t.Errorf("Expected %s to be %s but found %s", actualDescription, expected, actual)
+	}
+}
+
+func AssertIntegersAreEqual(t *testing.T, actual int64, expected int64, actualDescription string) {
+	if actual != expected {
+		t.Errorf("Expected %s to be %d but found %d", actualDescription, expected, actual)
 	}
 }
 
