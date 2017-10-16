@@ -2,6 +2,7 @@ package parser
 
 import (
 	"ast"
+	"fmt"
 	"lexer"
 	"testing"
 )
@@ -12,11 +13,7 @@ func TestLetStatments(t *testing.T) {
 		let y = 10;
 		let foobar = 838383;`
 
-	l := lexer.New(input)
-	p := New(l)
-
-	program := p.ParseProgram()
-	checkParserErrors(t, p)
+	program := CreateProgram(t, input)
 
 	if program == nil {
 		t.Fatalf("Expected ParseProgram to return an object, and not nil")
@@ -47,11 +44,7 @@ func TestReturnStatments(t *testing.T) {
 		return 10;
 		return 993322;`
 
-	l := lexer.New(input)
-	p := New(l)
-
-	program := p.ParseProgram()
-	checkParserErrors(t, p)
+	program := CreateProgram(t, input)
 
 	if program == nil {
 		t.Fatalf("Expected ParseProgram to return an object, and not nil")
@@ -100,10 +93,7 @@ func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 func TestIdentifierExpression(t *testing.T) {
 	input := "foobar;"
 
-	l := lexer.New(input)
-	p := New(l)
-	program := p.ParseProgram()
-	checkParserErrors(t, p)
+	program := CreateProgram(t, input)
 
 	AssertProgramStatementLength(t, program, 1)
 
@@ -120,11 +110,7 @@ func TestIdentifierExpression(t *testing.T) {
 func TestIntegerLiteralExpression(t *testing.T) {
 	input := "5;"
 
-	l := lexer.New(input)
-	p := New(l)
-
-	program := p.ParseProgram()
-	checkParserErrors(t, p)
+	program := CreateProgram(t, input)
 	AssertProgramStatementLength(t, program, 1)
 
 	stmt := GetExpressionStatement(t, program, 0)
@@ -136,6 +122,67 @@ func TestIntegerLiteralExpression(t *testing.T) {
 
 	AssertIntegersAreEqual(t, literal.Value, 5, "Literal Value")
 	AssertStringsAreEqual(t, literal.TokenLiteral(), "5", "Literal TokenLiteral")
+}
+
+func TestParsingPrefixExpressions(t *testing.T) {
+	prefixTests := []struct {
+		input        string
+		operator     string
+		integerValue int64
+	}{
+		{"!5;", "!", 5},
+		{"-15;", "-", 15},
+	}
+
+	for _, tt := range prefixTests {
+		program := CreateProgram(t, tt.input)
+		AssertProgramStatementLength(t, program, 1)
+
+		stmt := GetExpressionStatement(t, program, 0)
+
+		prefixExp, ok := stmt.Expression.(*ast.PrefixExpression)
+		if !ok {
+			t.Fatalf("Expected prefix expression but got %T", stmt.Expression)
+		}
+
+		if prefixExp.Operator != tt.operator {
+			t.Fatalf("Expected operator to be %s but got %s", tt.operator, prefixExp.Operator)
+		}
+
+		if !testIntegerLiteral(t, prefixExp.Right, tt.integerValue) {
+			return
+		}
+	}
+}
+
+func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
+	integer, ok := il.(*ast.IntegerLiteral)
+	if !ok {
+		t.Errorf("Expected expression to be integer literal but got %T", il)
+		return false
+	}
+
+	if integer.Value != value {
+		t.Errorf("Expected integer value to be %d but got %d", value, integer.Value)
+		return false
+	}
+
+	if integer.TokenLiteral() != fmt.Sprintf("%d", value) {
+		t.Errorf("Expected integer literal token literal to be %d but got %s", value, integer.TokenLiteral())
+		return false
+	}
+
+	return true
+}
+
+func CreateProgram(t *testing.T, input string) *ast.Program {
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	return program
 }
 
 func AssertProgramStatementLength(t *testing.T, program *ast.Program, expectedStatmemtCount int) {
