@@ -155,6 +155,107 @@ func TestParsingPrefixExpressions(t *testing.T) {
 	}
 }
 
+func TestParsingInfixExpressions(t *testing.T) {
+	infixTests := []struct {
+		input      string
+		leftValue  int64
+		operator   string
+		rightValue int64
+	}{
+		{"1 + 2", 1, "+", 2},
+		{"1 - 2", 1, "-", 2},
+		{"1 * 2", 1, "*", 2},
+		{"4 / 2", 4, "/", 2},
+		{"1 > 2", 1, ">", 2},
+		{"1 < 2", 1, "<", 2},
+		{"1 == 2", 1, "==", 2},
+		{"1 != 2", 1, "!=", 2},
+	}
+
+	for _, tt := range infixTests {
+		program := CreateProgram(t, tt.input)
+		AssertProgramStatementLength(t, program, 1)
+
+		stmt := GetExpressionStatement(t, program, 0)
+
+		infixExp, ok := stmt.Expression.(*ast.InfixExpression)
+		if !ok {
+			t.Fatalf("Expected infix expression but got %T", stmt.Expression)
+		}
+
+		if !testIntegerLiteral(t, infixExp.Left, tt.leftValue) {
+			return
+		}
+
+		if infixExp.Operator != tt.operator {
+			t.Fatalf("Expected infix expression operator to be %s but got %s", tt.operator, infixExp.Operator)
+		}
+
+		if !testIntegerLiteral(t, infixExp.Right, tt.rightValue) {
+			return
+		}
+	}
+}
+
+func TestOperatorPrecedenceParsing(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{
+			"-a * b",
+			"((-a) * b)",
+		},
+		{
+			"!-a",
+			"(!(-a))",
+		},
+		{
+			"a + b + c",
+			"((a + b) + c)",
+		},
+		{
+			"a + b - c",
+			"((a + b) - c)",
+		},
+		{
+			"a * b * c",
+			"((a * b) * c)",
+		},
+		{
+			"a * b / c",
+			"((a * b) / c)",
+		},
+		{
+			"a + b * c + d / e - f",
+			"(((a + (b * c)) + (d / e)) - f)",
+		},
+		{
+			"3 + 4; -5 * 5",
+			"(3 + 4)((-5) * 5)",
+		},
+		{
+			"5 > 4 == 3 < 4",
+			"((5 > 4) == (3 < 4))",
+		},
+		{
+			"5 < 4 != 3 > 4",
+			"((5 < 4) != (3 > 4))",
+		},
+		{
+			"3 + 4 * 5 == 3 * 1 + 4 * 5",
+			"((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
+		},
+	}
+
+	for _, tt := range tests {
+		program := CreateProgram(t, tt.input)
+
+		actual := program.String()
+		AssertStringsAreEqual(t, actual, tt.expected, "program")
+	}
+}
+
 func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
 	integer, ok := il.(*ast.IntegerLiteral)
 	if !ok {
