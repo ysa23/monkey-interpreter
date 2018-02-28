@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"ast"
+	"../ast"
 	"fmt"
 	"../lexer"
 	"strconv"
