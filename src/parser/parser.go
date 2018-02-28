@@ -3,9 +3,9 @@ package parser
 import (
 	"ast"
 	"fmt"
-	"lexer"
+	"../lexer"
 	"strconv"
-	"token"
+	"../token"
 )
 
 const (
