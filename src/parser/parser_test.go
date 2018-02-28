@@ -3,7 +3,7 @@ package parser
 import (
 	"ast"
 	"fmt"
-	"src/lexer"
+	"lexer"
 	"testing"
 )
 

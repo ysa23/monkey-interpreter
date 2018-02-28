@@ -1,11 +1,11 @@
 package parser
 
 import (
-	"src/ast"
+	"ast"
 	"fmt"
-	"src/lexer"
+	"lexer"
 	"strconv"
-	"src/token"
+	"token"
 )
 
 const (
