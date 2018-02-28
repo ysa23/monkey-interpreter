@@ -3,7 +3,7 @@ package ast
 import (
 	"bytes"
 	"fmt"
-	"token"
+	"src/token"
 )
 
 type Node interface {
