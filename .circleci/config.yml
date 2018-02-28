@@ -22,7 +22,7 @@ jobs:
       - checkout
 
       # specify any bash command here prefixed with `run: `
+      - run: GOPATH=/go/src/github.com/ysa23/monkey-interpreter/
       - run: echo $GOPATH
-      - run: echo $GOROOT
       - run: go get -v -t -d ./...
       - run: go test -v ./...
