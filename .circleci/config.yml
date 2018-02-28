@@ -23,5 +23,6 @@ jobs:
 
       # specify any bash command here prefixed with `run: `
       - run: ls -la
+      - run: pwd
       - run: go get -v -t -d ./...
       - run: go test -v ./...
